@@ -71,7 +71,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 ### 3. Install Dependencies
 ```bash
-pip install flask flask-mysqldb bcrypt
+pip install -r requirements.txt
 ```
 
 ### 4. Configure MySQL
