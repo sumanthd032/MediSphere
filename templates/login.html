@@ -5,39 +5,68 @@
     <div class="col-md-6">
         <div class="card shadow-lg">
             <div class="card-body">
-                <h2 class="card-title text-center mb-4">Login to MediSphere</h2>
+                <h2 class="card-title text-center mb-4">Log In to MediSphere</h2>
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
                             <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                                 {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-                <form method="POST" action="{{ url_for('login') }}">
+                <form method="POST" action="{{ url_for('login') }}" id="login-form" novalidate>
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" pattern="[a-zA-Z0-9_]{3,50}" required aria-label="Username">
+                        <div class="invalid-feedback">
+                            Username must be 3-50 characters, alphanumeric or underscore.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required aria-label="Password">
+                        <div class="invalid-feedback">
+                            Password is required.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
-                        <select class="form-select" id="role" name="role" required>
+                        <select class="form-select" id="role" name="role" required aria-label="Select role">
                             <option value="admin">Admin</option>
                             <option value="doctor">Doctor</option>
                             <option value="patient">Patient</option>
                         </select>
+                        <div class="invalid-feedback">
+                            Please select a role.
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                    <button type="submit" class="btn btn-primary w-100" id="submit-btn">
+                        <span id="submit-text">Login</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm hidden" role="status" aria-hidden="true"></span>
+                    </button>
                 </form>
                 <p class="text-center mt-3">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
             </div>
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        const form = this;
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const spinner = document.getElementById('spinner');
+            submitBtn.disabled = true;
+            submitText.textContent = 'Logging in...';
+            spinner.classList.remove('hidden');
+        }
+        form.classList.add('was-validated');
+    });
+</script>
 {% endblock %}

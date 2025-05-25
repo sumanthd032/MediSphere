@@ -6,11 +6,22 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h5 class="card-title">Manage Patients</h5>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Contact</th>
+                            <th>Medical History</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -19,16 +30,26 @@
                         {% for patient in patients %}
                         <tr>
                             <td>{{ patient.name }}</td>
-                            <td>{{ patient.contact }}</td>
+                            <td>{{ patient.contact or 'N/A' }}</td>
+                            <td>{{ patient.medical_history or 'None' }}</td>
                             <td>{{ 'Approved' if patient.is_approved else 'Pending' }}</td>
                             <td>
                                 {% if not patient.is_approved %}
-                                <form method="POST" style="display:inline;">
+                                <form method="POST" id="approve-form-{{ patient.patient_id }}">
                                     <input type="hidden" name="patient_id" value="{{ patient.patient_id }}">
-                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    <button type="submit" class="btn btn-sm btn-success" id="approve-btn-{{ patient.patient_id }}">
+                                        <span id="approve-text-{{ patient.patient_id }}">Approve</span>
+                                        <span id="spinner-{{ patient.patient_id }}" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                                    </button>
                                 </form>
+                                {% else %}
+                                <span class="text-muted">Approved</span>
                                 {% endif %}
                             </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">No patients found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -37,4 +58,17 @@
         </div>
     </div>
 </div>
+<script>
+    document.querySelectorAll('form[id^="approve-form-"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const patientId = this.id.split('-')[2];
+            const submitBtn = document.getElementById(`approve-btn-${patientId}`);
+            const submitText = document.getElementById(`approve-text-${patientId}`);
+            const spinner = document.getElementById(`spinner-${patientId}`);
+            submitBtn.disabled = true;
+            submitText.textContent = 'Approving...';
+            spinner.classList.remove('hidden');
+        });
+    });
+</script>
 {% endblock %}

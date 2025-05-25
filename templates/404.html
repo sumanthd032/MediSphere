@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}404 - Page Not Found{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card shadow-lg">
+            <div class="card-body">
+                <h1 class="display-1">404</h1>
+                <h2 class="card-title">Page Not Found</h2>
+                <p>The page you’re looking for doesn’t exist.</p>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

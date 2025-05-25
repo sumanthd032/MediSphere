@@ -6,19 +6,52 @@
         <div class="card shadow-lg">
             <div class="card-body">
                 <h5 class="card-title">Write Prescription</h5>
-                <form method="POST">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <form method="POST" id="prescription-form" novalidate>
                     <div class="mb-3">
                         <label for="medication" class="form-label">Medication</label>
-                        <textarea class="form-control" id="medication" name="medication" required></textarea>
+                        <textarea class="form-control" id="medication" name="medication" rows="4" required aria-label="Medication"></textarea>
+                        <div class="invalid-feedback">
+                            Medication is required.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes"></textarea>
+                        <textarea class="form-control" id="notes" name="notes" rows="4" aria-label="Notes"></textarea>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Submit</button>
+                    <button type="submit" class="btn btn-primary w-100" id="submit-btn">
+                        <span id="submit-text">Submit</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('prescription-form').addEventListener('submit', function(e) {
+        const form = this;
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const spinner = document.getElementById('spinner');
+            submitBtn.disabled = true;
+            submitText.textContent = 'Submitting...';
+            spinner.classList.remove('hidden');
+        }
+        form.classList.add('was-validated');
+    });
+</script>
 {% endblock %}

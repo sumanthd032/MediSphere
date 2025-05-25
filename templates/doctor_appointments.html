@@ -1,16 +1,27 @@
 {% extends 'base.html' %}
-{% block title %}Manage Appointments{% endblock %}
+{% block title %}Doctor Appointments{% endblock %}
 {% block content %}
 <div class="row">
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Your Appointments</h5>
+                <h5 class="card-title">Manage Appointments</h5>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Patient</th>
+                            <th>Appointment ID</th>
                             <th>Date</th>
+                            <th>Patient</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -18,29 +29,39 @@
                     <tbody>
                         {% for appt in appointments %}
                         <tr>
-                            <td>{{ appt.patient_name }}</td>
+                            <td>{{ appt.appointment_id }}</td>
                             <td>{{ appt.appointment_date }}</td>
+                            <td>
+                                <a href="{{ url_for('patient_profile', patient_id=appt.patient_id) }}">{{ appt.patient_name }}</a>
+                            </td>
                             <td>{{ appt.status | capitalize }}</td>
                             <td>
                                 {% if appt.status == 'pending' %}
-                                <form method="POST" style="display:inline;">
+                                <form method="POST" style="display:inline;" id="accept-form-{{ appt.appointment_id }}">
                                     <input type="hidden" name="appointment_id" value="{{ appt.appointment_id }}">
                                     <input type="hidden" name="action" value="accepted">
-                                    <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                    <button type="submit" class="btn btn-sm btn-success" id="accept-btn-{{ appt.appointment_id }}">
+                                        <span id="accept-text-{{ appt.appointment_id }}">Accept</span>
+                                        <span id="accept-spinner-{{ appt.appointment_id }}" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                                    </button>
                                 </form>
-                                <form method="POST" style="display:inline;">
+                                <form method="POST" style="display:inline;" id="reject-form-{{ appt.appointment_id }}">
                                     <input type="hidden" name="appointment_id" value="{{ appt.appointment_id }}">
                                     <input type="hidden" name="action" value="rejected">
-                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                    <button type="submit" class="btn btn-sm btn-danger" id="reject-btn-{{ appt.appointment_id }}">
+                                        <span id="reject-text-{{ appt.appointment_id }}">Reject</span>
+                                        <span id="reject-spinner-{{ appt.appointment_id }}" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                                    </button>
                                 </form>
                                 {% endif %}
-                                <a href="{{ url_for('patient_profile', patient_id=appt.patient_id) }}" class="btn btn-sm btn-info">View Profile</a>
+                                {% if appt.status == 'accepted' %}
                                 <a href="{{ url_for('write_prescription', appointment_id=appt.appointment_id) }}" class="btn btn-sm btn-primary">Write Prescription</a>
+                                {% endif %}
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4">No appointments found.</td>
+                            <td colspan="5">No appointments found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -49,4 +70,18 @@
         </div>
     </div>
 </div>
+<script>
+    document.querySelectorAll('form[id^="accept-form-"], form[id^="reject-form-"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const apptId = this.id.split('-')[2];
+            const action = this.id.split('-')[0];
+            const submitBtn = document.getElementById(`${action}-btn-${apptId}`);
+            const submitText = document.getElementById(`${action}-text-${apptId}`);
+            const spinner = document.getElementById(`${action}-spinner-${apptId}`);
+            submitBtn.disabled = true;
+            submitText.textContent = action === 'accept' ? 'Accepting...' : 'Rejecting...';
+            spinner.classList.remove('hidden');
+        });
+    });
+</script>
 {% endblock %}

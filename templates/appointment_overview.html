@@ -6,10 +6,11 @@
         <div class="card shadow-sm">
             <div class="card-body">
                 <h5 class="card-title">Appointment Overview</h5>
-                <form method="POST" class="mb-3">
+                <form method="POST" class="mb-3" id="filter-form" novalidate>
                     <div class="row">
                         <div class="col-md-5">
-                            <select class="form-select" name="doctor_id">
+                            <label for="doctor_id" class="form-label">Filter by Doctor</label>
+                            <select class="form-select" id="doctor_id" name="doctor_id" aria-label="Select Doctor">
                                 <option value="">All Doctors</option>
                                 {% for doctor in doctors %}
                                 <option value="{{ doctor.doctor_id }}">{{ doctor.name }}</option>
@@ -17,7 +18,8 @@
                             </select>
                         </div>
                         <div class="col-md-5">
-                            <select class="form-select" name="patient_id">
+                            <label for="patient_id" class="form-label">Filter by Patient</label>
+                            <select class="form-select" id="patient_id" name="patient_id" aria-label="Select Patient">
                                 <option value="">All Patients</option>
                                 {% for patient in patients %}
                                 <option value="{{ patient.patient_id }}">{{ patient.name }}</option>
@@ -25,30 +27,35 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="submit" class="btn btn-primary w-100">Filter</button>
+                            <button type="submit" class="btn btn-primary w-100 mt-4" id="filter-btn">
+                                <span id="filter-text">Filter</span>
+                                <span id="filter-spinner" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                            </button>
                         </div>
                     </div>
                 </form>
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <th>Doctor</th>
-                            <th>Patient</th>
+                            <th>Appointment ID</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Doctor</th>
+                            <th>Patient</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for appt in appointments %}
                         <tr>
-                            <td>{{ appt.doctor_name }}</td>
-                            <td>{{ appt.patient_name }}</td>
+                            <td>{{ appt.appointment_id }}</td>
                             <td>{{ appt.appointment_date }}</td>
                             <td>{{ appt.status | capitalize }}</td>
+                            <td>{{ appt.doctor_name }}</td>
+                            <td>{{ appt.patient_name }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4">No appointments found.</td>
+                            <td colspan="5">No appointments found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -57,4 +64,14 @@
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('filter-form').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('filter-btn');
+        const submitText = document.getElementById('filter-text');
+        const spinner = document.getElementById('filter-spinner');
+        submitBtn.disabled = true;
+        submitText.textContent = 'Filtering...';
+        spinner.classList.remove('hidden');
+    });
+</script>
 {% endblock %}

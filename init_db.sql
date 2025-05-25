@@ -74,12 +74,24 @@ CREATE TABLE activity_logs (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 ) ENGINE=InnoDB;
 
+-- Doctor Schedules table
+CREATE TABLE doctor_schedules (
+    schedule_id INT AUTO_INCREMENT PRIMARY KEY,
+    doctor_id INT,
+    day ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id),
+    UNIQUE (doctor_id, day, start_time)
+) ENGINE=InnoDB;
+
 -- Indexes for performance
 CREATE INDEX idx_username ON users(username);
 CREATE INDEX idx_doctor_id ON appointments(doctor_id);
 CREATE INDEX idx_patient_id ON appointments(patient_id);
 CREATE INDEX idx_appointment_date ON appointments(appointment_date);
 CREATE INDEX idx_timestamp ON activity_logs(timestamp);
+CREATE INDEX idx_doctor_schedule ON doctor_schedules(doctor_id);
 
 -- Insert sample departments
 INSERT INTO departments (name) VALUES ('Cardiology'), ('Neurology'), ('Pediatrics');

@@ -5,28 +5,31 @@
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h5 class="card-title">Patient: {{ patient.name }}</h5>
-                <p><strong>Contact:</strong> {{ patient.contact }}</p>
-                <p><strong>Medical History:</strong> {{ patient.medical_history or 'None' }}</p>
-                <h6>Prescription History</h6>
+                <h5 class="card-title">Patient Profile</h5>
+                <h6>Name: {{ patient.name }}</h6>
+                <p>Contact: {{ patient.contact or 'N/A' }}</p>
+                <p>Medical History: {{ patient.medical_history or 'None' }}</p>
+                <h6 class="mt-4">Prescriptions</h6>
                 <table class="table table-striped">
                     <thead>
                         <tr>
+                            <th>Prescription ID</th>
                             <th>Medication</th>
                             <th>Notes</th>
                             <th>Date</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for pr in prescriptions %}
+                        {% for prescription in prescriptions %}
                         <tr>
-                            <td>{{ pr.medication }}</td>
-                            <td>{{ pr.notes or 'None' }}</td>
-                            <td>{{ pr.created_at }}</td>
+                            <td>{{ prescription.prescription_id }}</td>
+                            <td>{{ prescription.medication }}</td>
+                            <td>{{ prescription.notes or 'None' }}</td>
+                            <td>{{ prescription.created_at }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="3">No prescriptions found.</td>
+                            <td colspan="4">No prescriptions found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

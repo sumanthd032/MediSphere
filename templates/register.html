@@ -11,49 +11,73 @@
                         {% for category, message in messages %}
                             <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                                 {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-                <form method="POST">
+                <form method="POST" id="register-form" novalidate>
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required>
+                        <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" pattern="[a-zA-Z0-9_]{3,50}" required aria-label="Username">
+                        <div class="invalid-feedback">
+                            Username must be 3-50 characters, alphanumeric or underscore.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" pattern="(?=.*[A-Z])(?=.*\d).{6,}" required aria-label="Password">
+                        <div class="invalid-feedback">
+                            Password must be at least 6 characters, with an uppercase letter and digit.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="name" class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter full name" required>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="Enter full name" maxlength="100" required aria-label="Full Name">
+                        <div class="invalid-feedback">
+                            Name is required and up to 100 characters.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="contact" class="form-label">Contact Number</label>
-                        <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter contact number">
+                        <input type="text" class="form-control" id="contact" name="contact" placeholder="Enter contact number" pattern="\+?\d{9,15}" maxlength="15" aria-label="Contact Number">
+                        <div class="invalid-feedback">
+                            Contact number must be 9-15 digits, optionally starting with +.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="role" class="form-label">Role</label>
-                        <select class="form-select" id="role" name="role" required>
+                        <select class="form-select" id="role" name="role" required aria-label="Select Role">
                             <option value="patient">Patient</option>
                             <option value="doctor">Doctor</option>
                         </select>
+                        <div class="invalid-feedback">
+                            Please select a role.
+                        </div>
                     </div>
                     <div class="mb-3" id="specialization-div" style="display: none;">
                         <label for="specialization" class="form-label">Specialization</label>
-                        <input type="text" class="form-control" id="specialization" name="specialization" placeholder="Enter specialization">
+                        <input type="text" class="form-control" id="specialization" name="specialization" placeholder="Enter specialization" maxlength="100" aria-label="Specialization">
+                        <div class="invalid-feedback">
+                            Specialization is required and up to 100 characters.
+                        </div>
                     </div>
                     <div class="mb-3" id="department-div" style="display: none;">
                         <label for="department_id" class="form-label">Department</label>
-                        <select class="form-select" id="department_id" name="department_id">
+                        <select class="form-select" id="department_id" name="department_id" aria-label="Select Department">
                             <option value="">Select Department</option>
                             {% for dept in departments %}
                             <option value="{{ dept.department_id }}">{{ dept.name }}</option>
                             {% endfor %}
                         </select>
+                        <div class="invalid-feedback">
+                            Please select a department.
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                    <button type="submit" class="btn btn-primary w-100" id="submit-btn">
+                        <span id="submit-text">Register</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                    </button>
                 </form>
                 <p class="text-center mt-3">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
             </div>
@@ -62,8 +86,32 @@
 </div>
 <script>
     document.getElementById('role').addEventListener('change', function() {
-        document.getElementById('specialization-div').style.display = this.value === 'doctor' ? 'block' : 'none';
-        document.getElementById('department-div').style.display = this.value === 'doctor' ? 'block' : 'none';
+        const isDoctor = this.value === 'doctor';
+        document.getElementById('specialization-div').style.display = isDoctor ? 'block' : 'none';
+        document.getElementById('department-div').style.display = isDoctor ? 'block' : 'none';
+        if (isDoctor) {
+            document.getElementById('specialization').required = true;
+            document.getElementById('department_id').required = true;
+        } else {
+            document.getElementById('specialization').required = false;
+            document.getElementById('department_id').required = false;
+        }
+    });
+
+    document.getElementById('register-form').addEventListener('submit', function(e) {
+        const form = this;
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const spinner = document.getElementById('spinner');
+            submitBtn.disabled = true;
+            submitText.textContent = 'Registering...';
+            spinner.classList.remove('hidden');
+        }
+        form.classList.add('was-validated');
     });
 </script>
 {% endblock %}

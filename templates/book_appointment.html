@@ -6,23 +6,60 @@
         <div class="card shadow-lg">
             <div class="card-body">
                 <h5 class="card-title">Book Appointment</h5>
-                <form method="POST">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <form method="POST" id="book-appointment-form" novalidate>
                     <div class="mb-3">
                         <label for="doctor_id" class="form-label">Doctor</label>
-                        <select class="form-select" id="doctor_id" name="doctor_id" required>
+                        <select class="form-select" id="doctor_id" name="doctor_id" required aria-label="Select Doctor">
+                            <option value="">Select Doctor</option>
                             {% for doctor in doctors %}
                             <option value="{{ doctor.doctor_id }}">{{ doctor.name }}</option>
                             {% endfor %}
                         </select>
+                        <div class="invalid-feedback">
+                            Please select a doctor.
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="appointment_date" class="form-label">Date & Time</label>
-                        <input type="datetime-local" class="form-control" id="appointment_date" name="appointment_date" required>
+                        <input type="datetime-local" class="form-control" id="appointment_date" name="appointment_date" required min="{{ now().strftime('%Y-%m-%dT%H:%M') }}" aria-label="Date and Time">
+                        <div class="invalid-feedback">
+                            Please select a valid future date and time.
+                        </div>
                     </div>
-                    <button type="submit" class="btn btn-primary w-100">Book</button>
+                    <button type="submit" class="btn btn-primary w-100" id="submit-btn">
+                        <span id="submit-text">Book</span>
+                        <span id="spinner" class="spinner-border spinner-border-sm hidden" aria-hidden="true"></span>
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+<script>
+    document.getElementById('book-appointment-form').addEventListener('submit', function(e) {
+        const form = this;
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        } else {
+            const submitBtn = document.getElementById('submit-btn');
+            const submitText = document.getElementById('submit-text');
+            const spinner = document.getElementById('spinner');
+            submitBtn.disabled = true;
+            submitText.textContent = 'Booking...';
+            spinner.classList.remove('hidden');
+        }
+        form.classList.add('was-validated');
+    });
+</script>
 {% endblock %}

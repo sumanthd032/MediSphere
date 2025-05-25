@@ -2,9 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from flask_mysqldb import MySQL
 from flask_bcrypt import Bcrypt
 from config import Config
-from datetime import datetime
+from datetime import datetime, date
 import csv
 from io import StringIO
+import re
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -36,6 +37,36 @@ def log_activity(user_id, action):
     finally:
         cur.close()
 
+def validate_username(username):
+    if not re.match(r'^[a-zA-Z0-9_]{3,50}$', username):
+        return False
+    return True
+
+def validate_password(password):
+    if len(password) < 6 or not re.search(r'[A-Z]', password) or not re.search(r'[0-9]', password):
+        return False
+    return True
+
+def validate_contact(contact):
+    if contact and not re.match(r'^\+?1?\d{9,15}$', contact):
+        return False
+    return True
+
+def validate_date(appointment_date):
+    try:
+        dt = datetime.strptime(appointment_date, '%Y-%m-%dT%H:%M')
+        return dt > datetime.now()
+    except ValueError:
+        return False
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    return render_template('500.html'), 500
+
 @app.route('/')
 def index():
     if 'user_id' in session:
@@ -45,9 +76,13 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
         role = request.form['role']
+        
+        if not validate_username(username):
+            flash('Invalid username format.', 'danger')
+            return render_template('login.html')
         
         cur = mysql.connection.cursor()
         cur.execute("SELECT user_id, password, role FROM users WHERE username = %s", (username,))
@@ -76,11 +111,24 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
-        name = request.form['name']
-        contact = request.form.get('contact', '')
+        name = request.form['name'].strip()
+        contact = request.form.get('contact', '').strip()
         role = request.form['role']
+        
+        if not validate_username(username):
+            flash('Username must be 3-50 characters, alphanumeric or underscore.', 'danger')
+            return render_template('register.html')
+        if not validate_password(password):
+            flash('Password must be at least 6 characters, with an uppercase letter and a number.', 'danger')
+            return render_template('register.html')
+        if not name or len(name) > 100:
+            flash('Name is required and must be under 100 characters.', 'danger')
+            return render_template('register.html')
+        if not validate_contact(contact):
+            flash('Invalid contact number format.', 'danger')
+            return render_template('register.html')
         
         cur = mysql.connection.cursor()
         cur.execute("SELECT user_id FROM users WHERE username = %s", (username,))
@@ -104,11 +152,13 @@ def register():
                     (user_id, name, contact, False)
                 )
             elif role == 'doctor':
-                specialization = request.form['specialization']
+                specialization = request.form['specialization'].strip()
                 department_id = request.form['department_id']
+                if not specialization or len(specialization) > 100:
+                    raise ValueError('Specialization is required and must be under 100 characters.')
                 cur.execute(
                     "INSERT INTO doctors (user_id, name, specialization, department_id) VALUES (%s, %s, %s, %s)",
-                    (user_id, name, specialization, department_id)
+                    (user_id, name, specialization, department_id or None)
                 )
             
             mysql.connection.commit()
@@ -161,23 +211,27 @@ def doctor_management():
         cur = mysql.connection.cursor()
         try:
             if action == 'add':
-                username = request.form['username']
+                username = request.form['username'].strip()
                 password = request.form['password']
-                name = request.form['name']
-                specialization = request.form['specialization']
+                name = request.form['name'].strip()
+                specialization = request.form['specialization'].strip()
                 department_id = request.form['department_id']
+                if not validate_username(username) or not validate_password(password) or not name or not specialization:
+                    raise ValueError('Invalid input data.')
                 hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
                 cur.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s)", (username, hashed_password, 'doctor'))
                 user_id = cur.lastrowid
-                cur.execute("INSERT INTO doctors (user_id, name, specialization, department_id) VALUES (%s, %s, %s, %s)", (user_id, name, specialization, department_id))
-                log_activity(user_id, "Doctor added")
+                cur.execute("INSERT INTO doctors (user_id, name, specialization, department_id) VALUES (%s, %s, %s, %s)", (user_id, name, specialization, department_id or None))
+                log_activity(session['user_id'], "Doctor added")
                 flash('Doctor added successfully.', 'success')
             elif action == 'edit':
                 doctor_id = request.form['doctor_id']
-                name = request.form['name']
-                specialization = request.form['specialization']
+                name = request.form['name'].strip()
+                specialization = request.form['specialization'].strip()
                 department_id = request.form['department_id']
-                cur.execute("UPDATE doctors SET name = %s, specialization = %s, department_id = %s WHERE doctor_id = %s", (name, specialization, department_id, doctor_id))
+                if not name or not specialization:
+                    raise ValueError('Name and specialization are required.')
+                cur.execute("UPDATE doctors SET name = %s, specialization = %s, department_id = %s WHERE doctor_id = %s", (name, specialization, department_id or None, doctor_id))
                 log_activity(session['user_id'], f"Doctor {doctor_id} updated")
                 flash('Doctor updated successfully.', 'success')
             elif action == 'delete':
@@ -261,13 +315,17 @@ def department_management():
         cur = mysql.connection.cursor()
         try:
             if action == 'add':
-                name = request.form['name']
+                name = request.form['name'].strip()
+                if not name or len(name) > 100:
+                    raise ValueError('Department name is required and must be under 100 characters.')
                 cur.execute("INSERT INTO departments (name) VALUES (%s)", (name,))
                 log_activity(session['user_id'], f"Department {name} added")
                 flash('Department added successfully.', 'success')
             elif action == 'edit':
                 department_id = request.form['department_id']
-                name = request.form['name']
+                name = request.form['name'].strip()
+                if not name or len(name) > 100:
+                    raise ValueError('Department name is required and must be under 100 characters.')
                 cur.execute("UPDATE departments SET name = %s WHERE department_id = %s", (name, department_id))
                 log_activity(session['user_id'], f"Department {department_id} updated")
                 flash('Department updated successfully.', 'success')
@@ -346,6 +404,47 @@ def reports():
     cur.close()
     return render_template('reports.html', report_type=report_type, data=data, start_date=start_date, end_date=end_date)
 
+@app.route('/schedule_management', methods=['GET', 'POST'])
+@login_required('doctor')
+def schedule_management():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        cur = mysql.connection.cursor()
+        try:
+            if action == 'add':
+                day = request.form['day']
+                start_time = request.form['start_time']
+                end_time = request.form['end_time']
+                if not day or not start_time or not end_time or start_time >= end_time:
+                    raise ValueError('Invalid time range.')
+                cur.execute("SELECT doctor_id FROM doctors WHERE user_id = %s", (session['user_id'],))
+                doctor_id = cur.fetchone()['doctor_id']
+                cur.execute(
+                    "INSERT INTO doctor_schedules (doctor_id, day, start_time, end_time) VALUES (%s, %s, %s, %s)",
+                    (doctor_id, day, start_time, end_time)
+                )
+                log_activity(session['user_id'], f"Schedule added for {day}")
+                flash('Schedule added successfully.', 'success')
+            elif action == 'delete':
+                schedule_id = request.form['schedule_id']
+                cur.execute("DELETE FROM doctor_schedules WHERE schedule_id = %s", (schedule_id,))
+                log_activity(session['user_id'], f"Schedule {schedule_id} deleted")
+                flash('Schedule deleted successfully.', 'success')
+            mysql.connection.commit()
+        except Exception as e:
+            mysql.connection.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+        finally:
+            cur.close()
+    
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT doctor_id FROM doctors WHERE user_id = %s", (session['user_id'],))
+    doctor_id = cur.fetchone()['doctor_id']
+    cur.execute("SELECT schedule_id, day, start_time, end_time FROM doctor_schedules WHERE doctor_id = %s", (doctor_id,))
+    schedules = cur.fetchall()
+    cur.close()
+    return render_template('schedule_management.html', schedules=schedules)
+
 @app.route('/doctor_appointments', methods=['GET', 'POST'])
 @login_required('doctor')
 def doctor_appointments():
@@ -390,8 +489,11 @@ def patient_profile(patient_id):
 @login_required('doctor')
 def write_prescription(appointment_id):
     if request.method == 'POST':
-        medication = request.form['medication']
-        notes = request.form['notes']
+        medication = request.form['medication'].strip()
+        notes = request.form['notes'].strip()
+        if not medication:
+            flash('Medication is required.', 'danger')
+            return render_template('write_prescription.html', appointment_id=appointment_id)
         cur = mysql.connection.cursor()
         try:
             cur.execute("SELECT doctor_id, patient_id FROM appointments WHERE appointment_id = %s", (appointment_id,))
@@ -427,7 +529,34 @@ def book_appointment():
     if request.method == 'POST':
         doctor_id = request.form['doctor_id']
         appointment_date = request.form['appointment_date']
+        
+        if not validate_date(appointment_date):
+            flash('Appointment date must be in the future.', 'danger')
+            cur = mysql.connection.cursor()
+            cur.execute("SELECT doctor_id, name FROM doctors")
+            doctors = cur.fetchall()
+            cur.close()
+            return render_template('book_appointment.html', doctors=doctors, now=datetime.now)
+        
+        appt_dt = datetime.strptime(appointment_date, '%Y-%m-%dT%H:%M')
+        day_name = appt_dt.strftime('%A')
+        appt_time = appt_dt.time()
+        
         cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT start_time, end_time
+            FROM doctor_schedules
+            WHERE doctor_id = %s AND day = %s AND start_time <= %s AND end_time >= %s
+        """, (doctor_id, day_name, appt_time, appt_time))
+        schedule = cur.fetchone()
+        
+        if not schedule:
+            flash('Selected time is outside doctor’s availability.', 'danger')
+            cur.execute("SELECT doctor_id, name FROM doctors")
+            doctors = cur.fetchall()
+            cur.close()
+            return render_template('book_appointment.html', doctors=doctors, now=datetime.now)
+        
         try:
             cur.execute("SELECT patient_id FROM patients WHERE user_id = %s", (session['user_id'],))
             patient_id = cur.fetchone()['patient_id']
@@ -449,7 +578,7 @@ def book_appointment():
     cur.execute("SELECT doctor_id, name FROM doctors")
     doctors = cur.fetchall()
     cur.close()
-    return render_template('book_appointment.html', doctors=doctors)
+    return render_template('book_appointment.html', doctors=doctors, now=datetime.now)
 
 @app.route('/view_prescriptions')
 @login_required('patient')
@@ -472,7 +601,7 @@ def logout():
         log_activity(user_id, f"{session['role']} logout")
     session.pop('user_id', None)
     session.pop('role', None)
-    flash('You have been logged out.', 'success')
+    flash('Logged out successfully.', 'success')
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
