@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Patient Management{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Manage Patients</h5>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Contact</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.name }}</td>
+                            <td>{{ patient.contact }}</td>
+                            <td>{{ 'Approved' if patient.is_approved else 'Pending' }}</td>
+                            <td>
+                                {% if not patient.is_approved %}
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="patient_id" value="{{ patient.patient_id }}">
+                                    <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

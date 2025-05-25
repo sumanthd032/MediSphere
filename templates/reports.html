@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Reports</h5>
+                <form method="POST" class="mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label for="report_type" class="form-label">Report Type</label>
+                            <select class="form-select" id="report_type" name="report_type">
+                                <option value="appointments" {% if report_type == 'appointments' %}selected{% endif %}>Appointments</option>
+                                <option value="activity_logs" {% if report_type == 'activity_logs' %}selected{% endif %}>Activity Logs</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100 mt-4">Filter</button>
+                        </div>
+                    </div>
+                    <button type="submit" name="download" value="1" class="btn btn-success mt-3">Download CSV</button>
+                </form>
+                {% if report_type == 'appointments' %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Appointment ID</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Doctor</th>
+                            <th>Patient</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td>{{ row.appointment_id }}</td>
+                            <td>{{ row.appointment_date }}</td>
+                            <td>{{ row.status | capitalize }}</td>
+                            <td>{{ row.doctor_name }}</td>
+                            <td>{{ row.patient_name }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5">No data found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Action</th>
+                            <th>Timestamp</th>
+                            <th>Username</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <td>{{ row.log_id }}</td>
+                            <td>{{ row.action }}</td>
+                            <td>{{ row.timestamp }}</td>
+                            <td>{{ row.username }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No data found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

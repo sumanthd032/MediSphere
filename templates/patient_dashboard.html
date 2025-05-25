@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Patient Dashboard{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Your Appointments</h5>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td>{{ appt.doctor_name }}</td>
+                            <td>{{ appt.appointment_date }}</td>
+                            <td>{{ appt.status | capitalize }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3">No appointments found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Patient Actions</h5>
+                <a href="{{ url_for('doctor_directory') }}" class="btn btn-primary">Doctor Directory</a>
+                <a href="{{ url_for('book_appointment') }}" class="btn btn-primary">Book Appointment</a>
+                <a href="{{ url_for('view_prescriptions') }}" class="btn btn-primary">View Prescriptions</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+body {
+    background-color: #f8f9fa;
+}
+.card {
+    border: none;
+    border-radius: 10px;
+}
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+}
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+.btn-success {
+    background-color: #28a745;
+}
+.btn-success:hover {
+    background-color: #218838;
+}
+.navbar-brand {
+    font-weight: bold;
+}
+.alert {
+    margin-bottom: 1rem;
+}
+.card-title {
+    color: #333;
+}
+.table th, .table td {
+    vertical-align: middle;
+}
+.btn-sm {
+    margin-right: 5px;
+}
+.modal-content {
+    border-radius: 10px;
+}

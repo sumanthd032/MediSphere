@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Doctor Dashboard{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Upcoming Appointments</h5>
+                <p class="card-text display-4">{{ upcoming_appointments }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Today's Appointments</h5>
+                <p class="card-text display-4">{{ today_appointments }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Doctor Actions</h5>
+                <a href="{{ url_for('doctor_appointments') }}" class="btn btn-primary">Manage Appointments</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

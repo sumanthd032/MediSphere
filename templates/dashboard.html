@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Welcome to {{ role | capitalize }} Dashboard</h2>
+                <p>This is a placeholder dashboard for {{ role }}. Functionality will be added in the next step.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

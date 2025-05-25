@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}View Prescriptions{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Your Prescriptions</h5>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Doctor</th>
+                            <th>Medication</th>
+                            <th>Notes</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pr in prescriptions %}
+                        <tr>
+                            <td>{{ pr.doctor_name }}</td>
+                            <td>{{ pr.medication }}</td>
+                            <td>{{ pr.notes or 'None' }}</td>
+                            <td>{{ pr.created_at }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No prescriptions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}Manage Appointments{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Your Appointments</h5>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appt in appointments %}
+                        <tr>
+                            <td>{{ appt.patient_name }}</td>
+                            <td>{{ appt.appointment_date }}</td>
+                            <td>{{ appt.status | capitalize }}</td>
+                            <td>
+                                {% if appt.status == 'pending' %}
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="appointment_id" value="{{ appt.appointment_id }}">
+                                    <input type="hidden" name="action" value="accepted">
+                                    <button type="submit" class="btn btn-sm btn-success">Accept</button>
+                                </form>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="appointment_id" value="{{ appt.appointment_id }}">
+                                    <input type="hidden" name="action" value="rejected">
+                                    <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                                </form>
+                                {% endif %}
+                                <a href="{{ url_for('patient_profile', patient_id=appt.patient_id) }}" class="btn btn-sm btn-info">View Profile</a>
+                                <a href="{{ url_for('write_prescription', appointment_id=appt.appointment_id) }}" class="btn btn-sm btn-primary">Write Prescription</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4">No appointments found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

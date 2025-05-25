@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Patient Profile{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Patient: {{ patient.name }}</h5>
+                <p><strong>Contact:</strong> {{ patient.contact }}</p>
+                <p><strong>Medical History:</strong> {{ patient.medical_history or 'None' }}</p>
+                <h6>Prescription History</h6>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Medication</th>
+                            <th>Notes</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pr in prescriptions %}
+                        <tr>
+                            <td>{{ pr.medication }}</td>
+                            <td>{{ pr.notes or 'None' }}</td>
+                            <td>{{ pr.created_at }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3">No prescriptions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
