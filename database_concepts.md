@@ -2,6 +2,7 @@
 # Database Concepts in MediSphere Hospital Management System
 
 The MediSphere Hospital Management System uses a relational database (MySQL with InnoDB engine) to manage hospital operations for administrators, doctors, and patients. This document explains the database concepts applied, including normalization, table structure, relationships, constraints, SQL commands, indexes, and other principles, along with their implementation in the project.
+The below provided database concepts provide a deeper understanding to the project.
 
 ## 1. Database Concepts Applied
 
